@@ -3,169 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Prompt Playbook</title>
+    <title>Your AI Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .accordion-content { transition: max-height 0.3s ease-in-out; max-height: 0; overflow: hidden; }
-        .accordion-content.open { max-height: 1000px; }
-        .rotate-180 { transform: rotate(180deg); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .typing-indicator span { animation: blink 1.4s infinite both; height: 6px; width: 6px; background: #94a3b8; border-radius: 50%; display: inline-block; margin: 0 1px; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased pb-12">
+<body class="bg-slate-100 h-screen flex flex-col font-sans antialiased text-slate-800">
+
     <!-- Header -->
-    <header class="bg-blue-600 text-white p-6 shadow-md rounded-b-3xl mb-6">
-        <h1 class="text-3xl font-bold mb-2">AI Prompt Playbook</h1>
-        <p class="text-blue-100 text-sm">Your cheat sheet for getting the best answers from AI models like ChatGPT, Claude, and Gemini.</p>
+    <header class="bg-blue-600 text-white p-4 shadow-md z-10 flex items-center gap-3">
+        <div class="bg-white text-blue-600 w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div>
+            <h1 class="text-lg font-bold leading-tight">Prompt Builder</h1>
+            <p class="text-blue-200 text-xs mt-0.5"><i class="fas fa-lock text-[10px] mr-1"></i>100% Private • Runs on your device</p>
+        </div>
+        <button onclick="resetChat()" class="ml-auto text-blue-200 hover:text-white text-sm bg-blue-700 px-3 py-1 rounded-full transition-colors">
+            Reset
+        </button>
     </header>
 
-    <main class="max-w-3xl mx-auto px-4">
-        <!-- The Core Formula -->
-        <section class="bg-white p-6 rounded-2xl shadow-sm mb-6 border border-slate-200">
-            <h2 class="text-xl font-bold mb-3 text-blue-600">The Golden Formula</h2>
-            <p class="text-sm text-slate-600 mb-4">Great prompts give the AI a clear job. For the best results, try to include these 4 pieces in your request:</p>
-            <ul class="space-y-3 text-sm">
-                <li class="flex items-start gap-2">
-                    <i class="fas fa-user-astronaut text-blue-500 mt-1 w-5"></i> 
-                    <span><strong>Role:</strong> Tell the AI who it is. <em>("Act as an expert chef...")</em></span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <i class="fas fa-tasks text-blue-500 mt-1 w-5"></i> 
-                    <span><strong>Task:</strong> State exactly what you need. <em>("Create a 3-day meal plan...")</em></span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <i class="fas fa-info-circle text-blue-500 mt-1 w-5"></i> 
-                    <span><strong>Context:</strong> Provide background details. <em>("I only have chicken, rice, and veggies...")</em></span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <i class="fas fa-list-ul text-blue-500 mt-1 w-5"></i> 
-                    <span><strong>Format:</strong> Tell it how you want the answer to look. <em>("Give it to me in a table...")</em></span>
-                </li>
-            </ul>
-        </section>
-
-        <!-- Task Categories -->
-        <h2 class="text-2xl font-bold mb-4 ml-1 text-slate-700">Choose a Task</h2>
-        
-        <div id="accordion-container" class="space-y-4">
-            <!-- Content injected via JavaScript -->
-        </div>
+    <!-- Chat Area -->
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-24">
+        <!-- Messages injected here -->
     </main>
 
+    <!-- Input Area -->
+    <div class="bg-white border-t border-slate-200 p-4 fixed bottom-0 w-full max-w-full z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <form id="chat-form" class="flex gap-2 max-w-3xl mx-auto" onsubmit="handleUserInput(event)">
+            <input type="text" id="user-input" class="flex-1 bg-slate-100 border border-slate-300 text-sm rounded-full px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all" placeholder="Type your answer here..." autocomplete="off">
+            <button type="submit" class="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-blue-700 transition-colors focus:outline-none shadow-sm disabled:opacity-50" id="send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+
     <script>
-        // The Playbook Data
-        const playbooks = [
-            {
-                title: "Drafting Emails & Messages",
-                icon: "fa-envelope",
-                description: "Write clear, perfectly toned emails without staring at a blank screen.",
-                template: "Act as a [Role/Profession]. Write a [Tone] email to [Audience] about [Topic]. Keep it under [Length] and ensure the main point is [Core Message].",
-                example: "Act as a helpful neighbor. Write a friendly email to the neighborhood association about organizing a summer block party. Keep it under 3 paragraphs and ensure the main point is finding a date that works for everyone."
-            },
-            {
-                title: "Planning Travel & Itineraries",
-                icon: "fa-plane-departure",
-                description: "Build logical, step-by-step travel plans tailored to your interests.",
-                template: "Act as an expert local tour guide. Create a step-by-step [Number]-day itinerary for [Destination]. The travelers are [Who is going] and they love [Interests]. Please format the output as a day-by-day table including activity, location, and estimated time.",
-                example: "Act as an expert local tour guide. Create a step-by-step 3-day itinerary for Rome. The travelers are a couple and they love history and street food. Please format the output as a day-by-day table including activity, location, and estimated time."
-            },
-            {
-                title: "Learning & Summarizing",
-                icon: "fa-book-open",
-                description: "Break down complex topics into bite-sized, easy-to-understand pieces.",
-                template: "Act as an expert teacher. Explain [Complex Topic] to me as if I am [Age/Experience Level]. Use simple analogies and break the explanation down into [Number] bullet points.",
-                example: "Act as an expert teacher. Explain how artificial intelligence works to me as if I am 12 years old. Use simple analogies and break the explanation down into 4 bullet points."
-            },
-            {
-                title: "Meal Planning & Kitchen",
-                icon: "fa-utensils",
-                description: "Turn random pantry ingredients into structured recipes and meal plans.",
-                template: "Act as a professional chef. Create a [Number]-day dinner meal plan using the following ingredients I have: [List Ingredients]. The meals should take no longer than [Time limit] to prep. Format the response with the Recipe Name, Ingredients Used, and Step-by-Step Instructions.",
-                example: "Act as a professional chef. Create a 3-day dinner meal plan using the following ingredients I have: chicken breasts, rice, bell peppers, onions, black beans, and tortillas. The meals should take no longer than 30 minutes to prep. Format the response with the Recipe Name, Ingredients Used, and Step-by-Step Instructions."
-            },
-            {
-                title: "Troubleshooting Tech",
-                icon: "fa-laptop-code",
-                description: "Fix home Wi-Fi, printer issues, or phone glitches step-by-step.",
-                template: "Act as a patient IT support technician. I am having trouble with [Device/Software] where it [Describe Problem]. Ask me one troubleshooting question at a time to diagnose the issue, rather than giving me a massive list of steps all at once.",
-                example: "Act as a patient IT support technician. I am having trouble with my home Wi-Fi where it keeps disconnecting from my TV. Ask me one troubleshooting question at a time to diagnose the issue, rather than giving me a massive list of steps all at once."
+        const chatContainer = document.getElementById('chat-container');
+        const userInputBox = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        
+        // State Machine Variables
+        let currentStep = 0;
+        let taskData = { goal: "", audience: "", details: "" };
+
+        // Start chat
+        window.onload = () => {
+            setTimeout(() => addBotMessage("Hey there! 👋 I'm your prompt assistant. What kind of magic are we trying to do today? (e.g., writing an email, planning a dinner, fixing the Wi-Fi, or writing some code)"), 500);
+        };
+
+        function resetChat() {
+            chatContainer.innerHTML = '';
+            currentStep = 0;
+            taskData = { goal: "", audience: "", details: "" };
+            addBotMessage("Chat reset! Your previous data has been cleared. What are we working on now?");
+            userInputBox.disabled = false;
+            sendBtn.disabled = false;
+        }
+
+        function handleUserInput(e) {
+            e.preventDefault();
+            const text = userInputBox.value.trim();
+            if (!text) return;
+
+            addUserMessage(text);
+            userInputBox.value = '';
+            userInputBox.disabled = true;
+            sendBtn.disabled = true;
+
+            showTypingIndicator();
+
+            setTimeout(() => {
+                removeTypingIndicator();
+                processLogic(text);
+                userInputBox.disabled = false;
+                sendBtn.disabled = false;
+                userInputBox.focus();
+            }, 800 + Math.random() * 600);
+        }
+
+        function processLogic(text) {
+            if (currentStep === 0) {
+                taskData.goal = text;
+                addBotMessage(`Got it! You want help with: "${text}".<br><br>To make this perfect, <strong>who is this for</strong> or <strong>what is the final format?</strong> (e.g., "It's for my boss", "It's just for me", or "I need it in a bulleted list")`);
+                currentStep++;
+            } else if (currentStep === 1) {
+                taskData.audience = text;
+                addBotMessage(`Perfect. Last question: Are there any <strong>specific details, ingredients, or constraints</strong> I should know about? (e.g., "Keep it under 3 paragraphs", "I only have chicken and rice", or "Make it sound friendly")`);
+                currentStep++;
+            } else if (currentStep === 2) {
+                taskData.details = text;
+                generateFinalPrompt();
+                currentStep++;
             }
-        ];
+        }
 
-        const container = document.getElementById('accordion-container');
+        function generateFinalPrompt() {
+            const allText = (taskData.goal + " " + taskData.details).toLowerCase();
+            let recommendedLLM = "ChatGPT";
+            let llmReason = "It's an excellent all-around model for general tasks, writing, and brainstorming.";
+            
+            if (allText.includes("code") || allText.includes("software") || allText.includes("app") || allText.includes("debug")) {
+                recommendedLLM = "Claude";
+                llmReason = "Claude is widely considered the strongest model for logic, coding, and formatting.";
+            } else if (allText.includes("google") || allText.includes("search") || allText.includes("recent") || allText.includes("data") || allText.includes("maps") || allText.includes("today")) {
+                recommendedLLM = "Google Gemini";
+                llmReason = "Gemini is connected to the live internet, making it the best choice for up-to-date research.";
+            } else if (allText.includes("creative") || allText.includes("story") || allText.includes("write")) {
+                recommendedLLM = "Claude or ChatGPT";
+                llmReason = "Both are incredible writers. Claude tends to sound a bit more natural, while ChatGPT is highly creative.";
+            }
 
-        // Render the UI
-        playbooks.forEach((item, index) => {
-            const html = `
-                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                    <button class="w-full px-5 py-4 text-left flex justify-between items-center bg-white hover:bg-slate-50 transition-colors focus:outline-none" onclick="toggleAccordion(${index})">
-                        <div class="flex items-center gap-4">
-                            <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
-                                <i class="fas ${item.icon} text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-slate-800 text-lg">${item.title}</h3>
-                                <p class="text-sm text-slate-500">${item.description}</p>
-                            </div>
-                        </div>
-                        <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 ml-2" id="icon-${index}"></i>
+            // Engineered prompt using XML tags and Chain of Thought
+            const finalPrompt = `Act as an expert in this field. I need you to accomplish the following task:
+
+<task>
+${taskData.goal}
+</task>
+
+<audience_and_format>
+${taskData.audience}
+</audience_and_format>
+
+<constraints_and_context>
+${taskData.details}
+</constraints_and_context>
+
+Please think step-by-step about how to best fulfill this request before generating your final output. Provide only the requested output without conversational filler.`;
+
+            const finalMessage = `
+                <p class="mb-3">All done! I've structured your prompt so the AI knows exactly what to do.</p>
+                
+                <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 mb-4 text-sm">
+                    <p class="font-bold text-indigo-800 mb-1"><i class="fas fa-star mr-1"></i> Recommended AI: ${recommendedLLM}</p>
+                    <p class="text-indigo-600">${llmReason}</p>
+                </div>
+
+                <p class="font-bold text-sm text-slate-500 uppercase tracking-wider mb-2">Copy this into your personal AI account:</p>
+                <div class="relative">
+                    <div class="bg-slate-800 text-slate-100 p-4 rounded-xl text-sm pr-12 shadow-inner font-mono text-xs overflow-x-auto whitespace-pre-wrap" id="final-prompt-text">${finalPrompt}</div>
+                    <button onclick="copyFinalPrompt(this)" class="absolute top-2 right-2 p-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 hover:text-white transition-colors" title="Copy to clipboard">
+                        <i class="far fa-copy"></i>
                     </button>
-                    
-                    <div id="content-${index}" class="accordion-content bg-slate-50 border-t border-slate-100">
-                        <div class="p-5 space-y-5">
-                            <!-- Template -->
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">The Formula</h4>
-                                <div class="bg-white p-4 rounded-xl border border-slate-200 text-sm text-slate-700 leading-relaxed shadow-sm">
-                                    ${item.template.replace(/\[(.*?)\]/g, '<span class="font-bold text-blue-600 bg-blue-50 px-1 rounded">[$1]</span>')}
-                                </div>
-                            </div>
-                            
-                            <!-- Example -->
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ready-to-Use Example</h4>
-                                <div class="relative">
-                                    <div class="bg-slate-800 text-slate-100 p-4 rounded-xl text-sm pr-12 shadow-inner leading-relaxed">
-                                        <p id="prompt-${index}">${item.example}</p>
-                                    </div>
-                                    <button onclick="copyPrompt(${index})" class="absolute top-3 right-3 p-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 hover:text-white transition-colors" title="Copy to clipboard">
-                                        <i class="far fa-copy"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                </div>
+                <p class="mt-4 text-xs text-slate-400 text-center">Want to build another one? Just hit the Reset button at the top!</p>
+            `;
+
+            addBotMessage(finalMessage, true);
+        }
+
+        /* --- UI Helper Functions --- */
+        function addUserMessage(text) {
+            const html = `
+                <div class="flex justify-end mb-4">
+                    <div class="bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-2 max-w-[85%] text-sm shadow-sm">
+                        ${text}
                     </div>
                 </div>
             `;
-            container.innerHTML += html;
-        });
-
-        // Handle Accordion Logic
-        function toggleAccordion(index) {
-            const content = document.getElementById(`content-${index}`);
-            const icon = document.getElementById(`icon-${index}`);
-            
-            document.querySelectorAll('.accordion-content').forEach((el, i) => {
-                if (i !== index) {
-                    el.classList.remove('open');
-                    document.getElementById(`icon-${i}`).classList.remove('rotate-180');
-                }
-            });
-
-            content.classList.toggle('open');
-            icon.classList.toggle('rotate-180');
+            chatContainer.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
         }
 
-        // Handle Copy to Clipboard
-        function copyPrompt(index) {
-            const text = document.getElementById(`prompt-${index}`).innerText;
+        function addBotMessage(content, isHtml = false) {
+            const textContent = isHtml ? content : `<p>${content}</p>`;
+            const html = `
+                <div class="flex gap-3 mb-4">
+                    <div class="bg-white text-blue-600 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-100 text-sm">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="bg-white text-slate-700 border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] text-sm shadow-sm leading-relaxed">
+                        ${textContent}
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const html = `
+                <div id="typing-indicator" class="flex gap-3 mb-4">
+                    <div class="bg-white text-blue-600 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-100 text-sm">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm typing-indicator flex items-center">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+        }
+
+        function copyFinalPrompt(btn) {
+            const text = document.getElementById('final-prompt-text').innerText;
             navigator.clipboard.writeText(text).then(() => {
-                const btn = event.currentTarget;
                 const icon = btn.querySelector('i');
                 icon.className = 'fas fa-check text-green-400';
-                setTimeout(() => {
-                    icon.className = 'far fa-copy';
-                }, 2000);
+                setTimeout(() => { icon.className = 'far fa-copy'; }, 2000);
             });
         }
     </script>
